@@ -23,7 +23,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int uniq(char*);
+int uniq(int ignore_case, int show_count, int show_only_duplicated, char *filename);
 int head(char*, int);
 // ulib.c
 int stat(const char*, struct stat*);

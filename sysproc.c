@@ -11,13 +11,31 @@
 #define DEFAULT_LINES 14
 #define BUFSIZE 512
 
-int strcmp_kernel(const char *s1, const char *s2) {
-    while (*s1 && (*s1 == *s2)) {
-        s1++;
-        s2++;
+
+int tolower_kernel(int c) {
+    if (c >= 'A' && c <= 'Z') {
+        return c + 'a' - 'A';
     }
-    return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+    return c;
 }
+
+int strcmp_kernel(const char *s1, const char *s2, int ignore_case) {
+    if (ignore_case) {
+        while (*s1 && tolower_kernel(*s1) == tolower_kernel(*s2)) {
+            s1++;
+            s2++;
+        }
+        return tolower_kernel(*(const unsigned char *)s1) - tolower_kernel(*(const unsigned char *)s2);
+    } else {
+        while (*s1 && (*s1 == *s2)) {
+            s1++;
+            s2++;
+        }
+        return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+    }
+}
+
+
 
 int atoi(const char *s) {
     int n = 0;
@@ -85,16 +103,21 @@ int sys_head(void) {
 }
 
 
-
-
 int sys_uniq(void) {
     char *filename1;
     struct inode *ip;
     char buf[BUFSIZE];
     char prev_line[BUFSIZE] = {0};
     int offset = 0, n;
+    int ignore_case = 0, show_count = 0, show_only_duplicated = 0;
+    int count = 0;
 
-    if(argstr(0, &filename1) < 0)
+    // Fetching the flags first (assuming flags are passed as additional arguments to sys_uniq)
+    if (argint(0, &ignore_case) < 0 || argint(1, &show_count) < 0 || argint(2, &show_only_duplicated) < 0)
+        return -1;
+
+    // Fetch filename after flags
+    if(argstr(3, &filename1) < 0)
         return -1;
 
     // Fetch inode for filename1
@@ -103,30 +126,47 @@ int sys_uniq(void) {
 
     ilock(ip);
 
-    cprintf("Uniq command is getting executed in kernel mode\n");  // Added this line
+    cprintf("Uniq command is getting executed in kernel mode\n");
 
     while((n = readi(ip, buf, offset, sizeof(buf))) > 0) {
-    int line_start = 0;
-    for(int i = 0; i < n; i++) {
-        if(buf[i] == '\n' || i == n-1) {
-            buf[i] = '\0'; // Null-terminate the line
+        int line_start = 0;
+        for(int i = 0; i < n; i++) {
+            if(buf[i] == '\n' || i == n-1) {
+                buf[i] = '\0';
 
-            if(strcmp_kernel(buf + line_start, prev_line) != 0) {
-                cprintf("%s\n", buf + line_start);
-                safestrcpy(prev_line, buf + line_start, sizeof(prev_line));
+                if(strcmp_kernel(buf + line_start, prev_line, ignore_case) == 0) {
+                    count++;
+                } else {
+                    if (count > 0 && (!show_only_duplicated || (show_only_duplicated && count > 1))) {
+                        if (show_count) {
+                            cprintf("%d %s\n", count, prev_line);
+                        } else {
+                            cprintf("%s\n", prev_line);
+                        }
+                    }
+                    safestrcpy(prev_line, buf + line_start, sizeof(prev_line));
+                    count = 1;
+                }
+                line_start = i + 1;  // mark the start of the next line
             }
-            line_start = i + 1;  // mark the start of the next line
         }
-     }
-    offset += n;
-   }
+        offset += n;
+    }
 
+    if (count > 0 && (!show_only_duplicated || (show_only_duplicated && count > 1))) {
+        if (show_count) {
+            cprintf("%d %s\n", count, prev_line);
+        } else {
+            cprintf("%s\n", prev_line);
+        }
+    }
 
     iunlockput(ip);
 
-
     return 0;
 }
+
+
 
 
 int
