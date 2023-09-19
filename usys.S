@@ -31,3 +31,7 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(uniq)
 SYSCALL(head)
+SYSCALL(waitx)
+SYSCALL(getticks)
+SYSCALL(ps)
+

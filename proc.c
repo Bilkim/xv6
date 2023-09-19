@@ -20,6 +20,9 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
+
+
+
 void
 pinit(void)
 {
@@ -58,6 +61,7 @@ struct proc*
 myproc(void) {
   struct cpu *c;
   struct proc *p;
+
   pushcli();
   c = mycpu();
   p = c->proc;
@@ -111,6 +115,9 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  p->creation_time = ticks;
+  p->start_time = ticks;
 
   return p;
 }
@@ -260,6 +267,10 @@ exit(void)
         wakeup1(initproc);
     }
   }
+
+  curproc->end_time = ticks;
+  curproc->total_time = curproc->end_time - curproc->creation_time;
+
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;

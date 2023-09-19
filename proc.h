@@ -1,3 +1,5 @@
+
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -12,6 +14,8 @@ struct cpu {
 
 extern struct cpu cpus[NCPU];
 extern int ncpu;
+extern struct proc *curproc;
+
 
 //PAGEBREAK: 17
 // Saved registers for kernel context switches.
@@ -34,6 +38,13 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+struct last_unused {
+    int pid;
+    char name[16];
+    int start_time;
+    int total_time;
+};
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -49,6 +60,14 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int creation_time; // Time when the process was created
+  int end_time;      // Time when the process ended
+  int total_time;    // Total execution time
+  int start_time;
+
+  struct last_unused last_3_unused[3];
+  int last_index;  // to keep track of the current index in the history array
+
 };
 
 // Process memory is laid out contiguously, low addresses first:

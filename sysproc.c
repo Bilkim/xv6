@@ -1,15 +1,104 @@
 #include "types.h"
-#include "x86.h"
 #include "defs.h"
-#include "date.h"
 #include "param.h"
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "x86.h"
+#include "spinlock.h"
+#include "ps_stat.h"
 
 
 #define DEFAULT_LINES 14
 #define BUFSIZE 512
+
+extern struct {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+} ptable;
+
+int
+sys_getticks(void)
+{
+    return ticks; // Return current ticks since boot
+}
+
+int sys_ps(void) {
+    struct proc *p;
+    cprintf("Name\tpid\tstatus\tStart time\tend time\n");
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+	cprintf("%s\t", p->name);
+        cprintf("%d\t", p->pid);
+        switch(p->state) {
+            case UNUSED: cprintf("UNUSED"); break;
+	    case EMBRYO: cprintf("EMBRYO"); break;
+            case RUNNING: cprintf("RUNNING"); break;
+            case SLEEPING: cprintf("SLEEPING"); break;
+            case RUNNABLE: cprintf("RUNNABLE"); break;
+            case ZOMBIE: cprintf("ZOMBIE"); break;
+        }
+        cprintf("\t%d\t%d\n", p->start_time,p->end_time);
+    }
+
+    return 0;
+}
+
+
+int sys_waitx(int* waittime, int* runtime)
+{
+    struct proc *p;
+    int havekids, pid;
+
+    // Use argptr to safely get arguments from user space
+    if(argptr(0, (void*)&waittime, sizeof(waittime)) < 0)
+        return -1;
+
+    if(argptr(1, (void*)&runtime, sizeof(runtime)) < 0)
+        return -1;
+
+    acquire(&ptable.lock);
+    for(;;) {
+        havekids = 0;
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+            if(p->parent != myproc())
+                continue;
+            havekids = 1;
+            if(p->state == ZOMBIE) {
+                pid = p->pid;
+
+                // Calculate wait time and runtime
+                *waittime = p->end_time - p->creation_time - p->total_time;
+                *runtime = p->total_time;
+
+                // Update the history of unused processes before releasing
+                p->last_3_unused[p->last_index].pid = p->pid;
+                strncpy(p->last_3_unused[p->last_index].name, p->name, sizeof(p->name));
+                p->last_3_unused[p->last_index].start_time = p->start_time;
+                p->last_3_unused[p->last_index].total_time = p->total_time;
+
+                p->last_index = (p->last_index + 1) % 3;  // Ensure it cycles between 0-2
+
+                // Release process resources
+                kfree(p->kstack);
+                p->state = UNUSED;
+                p->parent = 0;
+                p->killed = 0;
+                release(&ptable.lock);
+                return pid;
+            }
+        }
+
+        if(!havekids || myproc()->killed) {
+            release(&ptable.lock);
+            return -1;
+        }
+
+        // Keep waiting
+        sleep(myproc(), &ptable.lock);
+    }
+}
+
 
 
 int tolower_kernel(int c) {

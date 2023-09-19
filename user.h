@@ -1,6 +1,7 @@
 struct stat;
 struct rtcdate;
 
+
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -25,6 +26,10 @@ int sleep(int);
 int uptime(void);
 int uniq(int ignore_case, int show_count, int show_only_duplicated, char *filename);
 int head(char*, int);
+int waitx(int*, int*);
+int getticks(void);
+void ps(void);
+
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
