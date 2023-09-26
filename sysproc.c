@@ -25,7 +25,7 @@ sys_getticks(void)
 
 int sys_ps(void) {
     struct proc *p;
-    cprintf("Name\tpid\tstatus\tStart time\tend time\n");
+    cprintf("Name\tpid\tstatus\tStart time\tend time\ttotal time\n");
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 	cprintf("%s\t", p->name);
@@ -38,7 +38,7 @@ int sys_ps(void) {
             case RUNNABLE: cprintf("RUNNABLE"); break;
             case ZOMBIE: cprintf("ZOMBIE"); break;
         }
-        cprintf("\t%d\t%d\n", p->start_time,p->end_time);
+        cprintf("\t%d\t%d\t%d\n", p->start_time,p->end_time,p->total_time);
     }
 
     return 0;
