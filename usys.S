@@ -34,4 +34,5 @@ SYSCALL(head)
 SYSCALL(waitx)
 SYSCALL(getticks)
 SYSCALL(ps)
-
+SYSCALL(cps)
+SYSCALL(chpr)

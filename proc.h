@@ -67,7 +67,8 @@ struct proc {
 
   struct last_unused last_3_unused[3];
   int last_index;  // to keep track of the current index in the history array
-
+  int priority;
+  int ctime;
 };
 
 // Process memory is laid out contiguously, low addresses first:

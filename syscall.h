@@ -25,3 +25,5 @@
 #define SYS_waitx  24
 #define SYS_getticks  25
 #define SYS_ps  26
+#define SYS_cps    27
+#define SYS_chpr   28

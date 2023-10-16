@@ -29,6 +29,8 @@ int head(char*, int);
 int waitx(int*, int*);
 int getticks(void);
 void ps(void);
+int cps(void);
+int chpr(int pid, int priority);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -108,6 +108,8 @@ extern int sys_head(void);
 extern int sys_waitx(void);
 extern int sys_getticks(void);
 extern int sys_ps(void);
+extern int sys_cps(void);
+extern int sys_chpr(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,7 +138,8 @@ static int (*syscalls[])(void) = {
 [SYS_waitx]    sys_waitx,
 [SYS_getticks]    sys_getticks,
 [SYS_ps]    sys_ps,
-
+[SYS_cps]     sys_cps,
+[SYS_chpr]    sys_chpr,
 };
 
 void
