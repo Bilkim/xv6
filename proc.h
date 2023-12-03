@@ -64,6 +64,8 @@ struct proc {
   int end_time;      // Time when the process ended
   int total_time;    // Total execution time
   int start_time;
+  uint stackTop;
+  uint stackBottom;
 
   struct last_unused last_3_unused[3];
   int last_index;  // to keep track of the current index in the history array

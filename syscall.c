@@ -14,6 +14,8 @@
 // to a saved program counter, and then the first argument.
 
 // Fetch the int at addr from the current process.
+
+/*
 int
 fetchint(uint addr, int *ip)
 {
@@ -23,12 +25,24 @@ fetchint(uint addr, int *ip)
     return -1;
   *ip = *(int*)(addr);
   return 0;
+}*/
+
+
+int fetchint(uint addr, int *ip)
+{
+	if(addr >= USERTOP  || addr+4 >= USERTOP )
+		return -1;
+	*ip = *(int*)(addr);
+	return 0;
 }
 
 // Fetch the nul-terminated string at addr from the current process.
 // Doesn't actually copy the string - just sets *pp to point at it.
 // Returns length of string, not including nul.
-int
+
+
+
+/*int
 fetchstr(uint addr, char **pp)
 {
   char *s, *ep;
@@ -43,7 +57,26 @@ fetchstr(uint addr, char **pp)
       return s - *pp;
   }
   return -1;
+}*/
+
+int fetchstr(uint addr, char **pp)
+{
+	char *s, *ep;
+
+	if(addr >= USERTOP)
+		return -1;
+	*pp = (char*)addr;
+	ep = (char*)USERTOP;
+	for(s = *pp; s < ep; s++)
+		if(*s == 0)
+			return s - *pp;
+	return -1;
 }
+
+
+
+
+
 
 // Fetch the nth 32-bit system call argument.
 int
@@ -60,7 +93,7 @@ argptr(int n, char **pp, int size)
 {
   int i;
   struct proc *curproc = myproc();
- 
+
   if(argint(n, &i) < 0)
     return -1;
   if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz || i == 0)
@@ -157,3 +190,7 @@ syscall(void)
     curproc->tf->eax = -1;
   }
 }
+
+
+
+
